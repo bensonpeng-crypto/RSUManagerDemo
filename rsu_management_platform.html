@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSU 管理平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #000;
+            padding: 8px 16px;
+            background: #f0f0f0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info, .search-box {
+            border: 2px solid #000;
+            padding: 8px 12px;
+            background: #fff;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid #ccc;
+            padding: 0.25rem 0.5rem;
+        }
+/* 
+        .connection-status.connected::after {
+            content: "在線";
+            position: absolute;
+            left: 25px;
+            top: -2px;
+            font-size: 12px;
+        } */
+
+        .status-light {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #666;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+
+        /* Layout */
+        .container {
+            min-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* Main Content */
+        .main-content {
+            width: 100%;
+            background: #fff;
+            border: 2px solid #000;
+            border-top: none;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .module {
+            display: block;
+            padding: 20px;
+        }
+
+        /* Tab Styles */
+        .tab-container {
+            border: 2px solid #000;
+            border-top: none;
+            background: #fff;
+        }
+
+        .tab-header {
+            display: flex;
+            background: #f0f0f0;
+            border-bottom: 2px solid #000;
+        }
+
+        .tab-button {
+            padding: 15px 20px;
+            border: none;
+            border-right: 2px solid #000;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .tab-button:last-child {
+            border-right: none;
+        }
+
+        .tab-button:hover {
+            background: #e0e0e0;
+        }
+
+        .tab-button.active {
+            background: #fff;
+            border-bottom: 2px solid #fff;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .module-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 2px solid #000;
+            padding: 12px;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-title-text {
+            flex: 1;
+        }
+
+        .reload-btn {
+            padding: 8px 15px;
+            border: 2px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+            margin-left: 15px;
+        }
+
+        .reload-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .reload-btn:active {
+            background: #d0d0d0;
+            transform: scale(0.98);
+        }
+
+        /* Table Action Buttons */
+        .table-action-btn {
+            padding: 4px 8px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0 2px;
+            transition: background 0.2s;
+        }
+
+        .table-action-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .table-action-btn.edit {
+            color: #0066cc;
+        }
+
+        .table-action-btn.delete {
+            color: #cc0000;
+        }
+
+        /* Animation for status messages */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Button Area */
+        .button-area {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: 2px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #e0e0e0;
+        }
+
+        .btn.primary {
+            background: #000;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background: #333;
+        }
+
+        /* Table */
+        .table-container {
+            border: 2px solid #000;
+            background: #fff;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 3px solid #000;
+            padding: 20px;
+            width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #000;
+            background: #fff;
+        }
+
+        /* Status Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            border: 2px solid #000;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-indicator.ok {
+            background: #00ff00;
+        }
+
+        .status-indicator.warning {
+            background: #ffff00;
+        }
+
+        .status-indicator.error {
+            background: #ff0000;
+        }
+
+        /* Footer */
+        .footer {
+            background: #fff;
+            border: 2px solid #000;
+            border-top: none;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-top: auto;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                width: 100%;
+            }
+            
+            .footer {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .footer .connection-status {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>RSU 管理平台</h1>
+        <div class="header-right">
+            <div class="connection-status">
+                <div class="status-light"></div>
+                <span>連線狀態指示燈</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- RSU System Status Module (Top Level) -->
+            <div id="system-status" class="module">
+                <div class="module-title">
+                    <span class="module-title-text">■ RSU System Status 模組</span>
+                    <button class="reload-btn" onclick="reloadSystemStatus()">🔄 重新載入</button>
+                </div>
+                
+                <div class="dashboard">
+                    <div class="status-card">
+                        <strong>Channel Status:</strong> ContOp <span class="status-indicator ok"></span>
+                    </div>
+                    <div class="status-card">
+                        <strong>Mode:</strong> Operate
+                    </div>
+                    <div class="status-card">
+                        <strong>Mode Status:</strong> Operate
+                    </div>
+                    <div class="status-card">
+                        <strong>Clock Source:</strong> GNSS
+                    </div>
+                    <div class="status-card">
+                        <strong>Clock Status:</strong> Active <span class="status-indicator ok"></span>
+                    </div>
+                    <div class="status-card">
+                        <strong>Clock Deviation:</strong> 100 ms
+                    </div>
+                    <div class="status-card">
+                        <strong>Overall Status:</strong> OK <span class="status-indicator ok"></span>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="btn primary">遠端重啟 RSU</button>
+                </div>
+            </div>
+
+            <!-- Tab Container for Other Modules -->
+            <div class="tab-container">
+                <div class="tab-header">
+                    <button class="tab-button active" onclick="switchTab('received-messages')">Received Messages</button>
+                    <button class="tab-button" onclick="switchTab('message-repetition')">Store and Repeat Messages</button>
+                    <button class="tab-button" onclick="switchTab('immediate-forward')">Immediate Forward Message</button>
+                </div>
+
+                <!-- Received Messages Tab -->
+                <div id="received-messages" class="tab-content active">
+                    <div class="module-title">■ Received Messages 模組</div>
+                    
+                    <div class="button-area">
+                        <button class="btn primary" onclick="openModal('received-modal')">新增</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>操作</th>
+                                    <th>PSID</th>
+                                    <th>目標 IP</th>
+                                    <th>Port</th>
+                                    <th>協定</th>
+                                    <th>RSSI</th>
+                                    <th>Interval</th>
+                                    <th>Delivery Start/Stop</th>
+                                    <th>Status</th>
+                                    <th>Secure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>
+                                        <button class="table-action-btn edit" onclick="editReceivedMessage(1)">編輯</button>
+                                        <button class="table-action-btn delete" onclick="deleteReceivedMessage(1)">刪除</button>
+                                    </td>
+                                    <td>0x8003</td>
+                                    <td>192.168.1.100</td>
+                                    <td>5000</td>
+                                    <td>UDP</td>
+                                    <td>-80</td>
+                                    <td>1</td>
+                                    <td>2023-01-01~2023-12-31</td>
+                                    <td>Active</td>
+                                    <td>Payload</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Store and Repeat Messages Tab -->
+                <div id="message-repetition" class="tab-content">
+                    <div class="module-title">■ Store and Repeat Messages 模組</div>
+                    
+                    <div class="button-area">
+                        <button class="btn primary" onclick="openModal('repetition-modal')">新增</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>操作</th>
+                                    <th>PSID</th>
+                                    <th>頻道</th>
+                                    <th>Payload Preview</th>
+                                    <th>Interval</th>
+                                    <th>Delivery Start/Stop</th>
+                                    <th>Priority</th>
+                                    <th>Enable</th>
+                                    <th>Options</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>
+                                        <button class="table-action-btn edit" onclick="editRepetitionMessage(1)">編輯</button>
+                                        <button class="table-action-btn delete" onclick="deleteRepetitionMessage(1)">刪除</button>
+                                    </td>
+                                    <td>0x8003</td>
+                                    <td>172</td>
+                                    <td>HEX_FRAME</td>
+                                    <td>1000 ms</td>
+                                    <td>2023-01-01~2023-12-31</td>
+                                    <td>7</td>
+                                    <td>Yes</td>
+                                    <td>Secure</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Immediate Forward Message Tab -->
+                <div id="immediate-forward" class="tab-content">
+                    <div class="module-title">■ Immediate Forward Message 模組</div>
+                    
+                    <div class="button-area">
+                        <button class="btn primary" onclick="openModal('forward-modal')">新增</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>操作</th>
+                                    <th>PSID</th>
+                                    <th>Payload Preview</th>
+                                    <th>Channel</th>
+                                    <th>Priority</th>
+                                    <th>Enable</th>
+                                    <th>Options</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>
+                                        <button class="table-action-btn edit" onclick="editForwardMessage(1)">編輯</button>
+                                        <button class="table-action-btn delete" onclick="deleteForwardMessage(1)">刪除</button>
+                                    </td>
+                                    <td>0x8007</td>
+                                    <td>HEX_IMMEDIATE_FRAME</td>
+                                    <td>172</td>
+                                    <td>5</td>
+                                    <td>Yes</td>
+                                    <td>Secure</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div>RSU Management Platform v1.0.0</div>
+        <div class="connection-status">
+            <div class="status-light"></div>
+            <span>連線狀態指示燈</span>
+        </div>
+        <div>最後更新: 2024-01-15 14:30:25</div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Received Messages Modal -->
+    <div id="received-modal" class="modal">
+        <div class="modal-content">
+            <h3>新增/編輯訊息</h3>
+            <div class="form-group">
+                <label>PSID</label>
+                <select>
+                    <option>0x8003</option>
+                    <option>0x8007</option>
+                    <option>0x800F</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>目標 IP</label>
+                <input type="text" placeholder="192.168.1.100">
+            </div>
+            <div class="form-group">
+                <label>Port</label>
+                <input type="number" placeholder="5000">
+            </div>
+            <div class="form-group">
+                <label>協定</label>
+                <select>
+                    <option>UDP</option>
+                    <option>TCP</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>RSSI 閾值</label>
+                <input type="number" placeholder="-80">
+            </div>
+            <div class="form-group">
+                <label>Interval</label>
+                <input type="number" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label>Delivery Start</label>
+                <input type="datetime-local">
+            </div>
+            <div class="form-group">
+                <label>Delivery Stop</label>
+                <input type="datetime-local">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox"> Status 啟用
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox"> Secure 選項
+                </label>
+            </div>
+            <div class="button-area">
+                <button class="btn primary">儲存</button>
+                <button class="btn" onclick="closeModal('received-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store and Repeat Messages Modal -->
+    <div id="repetition-modal" class="modal">
+        <div class="modal-content">
+            <h3>新增/編輯重播規則</h3>
+            <div class="form-group">
+                <label>PSID</label>
+                <select>
+                    <option>0x8003</option>
+                    <option>0x8007</option>
+                    <option>0x800F</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>頻道</label>
+                <input type="number" placeholder="172">
+            </div>
+            <div class="form-group">
+                <label>Payload HEX</label>
+                <textarea rows="4" placeholder="輸入HEX格式數據..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Interval (ms)</label>
+                <input type="number" placeholder="1000">
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select>
+                    <option>1</option>
+                    <option>5</option>
+                    <option>7</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox"> Enable
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Options</label>
+                <div>
+                    <label><input type="checkbox"> Secure</label>
+                    <label><input type="checkbox"> Bypass</label>
+                    <label><input type="checkbox"> ShortTerm</label>
+                    <label><input type="checkbox"> LongTerm</label>
+                </div>
+            </div>
+            <div class="button-area">
+                <button class="btn primary">儲存</button>
+                <button class="btn" onclick="closeModal('repetition-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Immediate Forward Modal -->
+    <div id="forward-modal" class="modal">
+        <div class="modal-content">
+            <h3>新增/編輯即時轉發規則</h3>
+            <div class="form-group">
+                <label>PSID</label>
+                <select>
+                    <option>0x8003</option>
+                    <option>0x8007</option>
+                    <option>0x800F</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Channel</label>
+                <input type="number" placeholder="172">
+            </div>
+            <div class="form-group">
+                <label>Payload HEX</label>
+                <textarea rows="4" placeholder="輸入HEX格式數據..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select>
+                    <option>1</option>
+                    <option>5</option>
+                    <option>7</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox"> Enable
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Options</label>
+                <div>
+                    <label><input type="checkbox"> Secure</label>
+                    <label><input type="checkbox"> Bypass</label>
+                </div>
+            </div>
+            <div class="button-area">
+                <button class="btn primary">儲存</button>
+                <button class="btn" onclick="closeModal('forward-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Add active class to clicked tab button
+            event.currentTarget.classList.add('active');
+        }
+
+        function reloadSystemStatus() {
+            const reloadBtn = event.currentTarget;
+            const originalText = reloadBtn.innerHTML;
+            
+            // 顯示載入狀態
+            reloadBtn.innerHTML = '⏳ 載入中...';
+            reloadBtn.disabled = true;
+            
+            // 模擬API調用延遲
+            setTimeout(() => {
+                // 更新狀態數據（這裡可以替換為實際的API調用）
+                updateSystemStatusData();
+                
+                // 恢復按鈕狀態
+                reloadBtn.innerHTML = originalText;
+                reloadBtn.disabled = false;
+                
+                // 顯示成功訊息
+                showStatusMessage('系統狀態已更新', 'success');
+            }, 1500);
+        }
+
+        function updateSystemStatusData() {
+            // 這裡可以添加實際的數據更新邏輯
+            // 例如：從API獲取最新狀態並更新DOM元素
+            
+            // 模擬數據更新
+            const statusCards = document.querySelectorAll('#system-status .status-card');
+            statusCards.forEach(card => {
+                // 添加短暫的更新動畫效果
+                card.style.opacity = '0.7';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 200);
+            });
+            
+            // 更新最後更新時間
+            const footer = document.querySelector('.footer div:last-child');
+            if (footer) {
+                const now = new Date();
+                const timeString = now.toLocaleString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                footer.textContent = `最後更新: ${timeString}`;
+            }
+        }
+
+        function showStatusMessage(message, type = 'info') {
+            // 創建臨時訊息元素
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: ${type === 'success' ? '#d4edda' : '#d1ecf1'};
+                color: ${type === 'success' ? '#155724' : '#0c5460'};
+                border: 2px solid ${type === 'success' ? '#c3e6cb' : '#bee5eb'};
+                padding: 10px 15px;
+                border-radius: 4px;
+                font-weight: bold;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Table action functions
+        function editReceivedMessage(index) {
+            showStatusMessage(`編輯 Received Message #${index}`, 'info');
+            // 這裡可以添加實際的編輯邏輯，例如打開編輯模態框
+            // openModal('received-modal');
+        }
+
+        function deleteReceivedMessage(index) {
+            if (confirm(`確定要刪除 Received Message #${index} 嗎？`)) {
+                showStatusMessage(`已刪除 Received Message #${index}`, 'success');
+                // 這裡可以添加實際的刪除邏輯
+            }
+        }
+
+        function editRepetitionMessage(index) {
+            showStatusMessage(`編輯 Store and Repeat Message #${index}`, 'info');
+            // 這裡可以添加實際的編輯邏輯
+            // openModal('repetition-modal');
+        }
+
+        function deleteRepetitionMessage(index) {
+            if (confirm(`確定要刪除 Store and Repeat Message #${index} 嗎？`)) {
+                showStatusMessage(`已刪除 Store and Repeat Message #${index}`, 'success');
+                // 這裡可以添加實際的刪除邏輯
+            }
+        }
+
+        function editForwardMessage(index) {
+            showStatusMessage(`編輯 Immediate Forward Message #${index}`, 'info');
+            // 這裡可以添加實際的編輯邏輯
+            // openModal('forward-modal');
+        }
+
+        function deleteForwardMessage(index) {
+            if (confirm(`確定要刪除 Immediate Forward Message #${index} 嗎？`)) {
+                showStatusMessage(`已刪除 Immediate Forward Message #${index}`, 'success');
+                // 這裡可以添加實際的刪除邏輯
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Initialize connection status animation
+        setInterval(() => {
+            const status = document.querySelectorAll('.connection-status');
+            status.forEach(s => {
+                s.style.opacity = s.style.opacity === '0.5' ? '1' : '0.5';
+            });
+        }, 1500);
+    </script>
+</body>
+</html>
